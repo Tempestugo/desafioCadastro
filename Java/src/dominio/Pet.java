@@ -18,6 +18,10 @@ public class Pet {
         this.endereco = endereco;
     }
 
+    public Pet() {
+
+    }
+
     public Endereco getEndereco() {
         return endereco;
     }

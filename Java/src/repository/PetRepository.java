@@ -2,17 +2,19 @@ package repository;
 
 
 import dominio.Pet;
+import dominio.SexoPet;
+import dominio.TipoPet;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
-//Teste commit
 //File, FileWriter, BufferedWrite
 // Métodos para escrever o arquivo do Pet (Passo 4),
 // ler o arquivo formulario.txt (Passo 1), listar os arquivos da pasta e deletar arquivos.
@@ -20,40 +22,6 @@ import java.util.Scanner;
 public class PetRepository {
 
 
-
-//    Scanner leitor = new Scanner(System.in);
-//    int opcao = 0;
-//
-//        do {
-//        exibirMenu();
-//        opcao = leitor.nextInt();
-//        leitor.nextLine();
-//
-//        switch (opcao) {
-//            case 1:
-//                cadastrarPet(leitor);
-//                break;
-//            case 2:
-//                alterarPet(leitor);
-//                break;
-//            case 3:
-//                deletarPet(leitor);
-//                break;
-//            case 4:
-//                listarTodos();
-//                break;
-//            case 5:
-//                listarPorCriterio(leitor);
-//                break;
-//            case 0:
-//                System.out.println("Encerrando o sistema...");
-//                break;
-//            default:
-//                System.out.println("Opção inválida! Tente novamente.");
-//        }
-//    } while (opcao != 0);
-//
-//        leitor.close();
 
 
     public static void exibirMenu() {
@@ -68,9 +36,26 @@ public class PetRepository {
     }
 // ano, mês, dia,T, hora, minuto - NOME+SOBRENOME em maiúsculo.
 
-    public static void cadastrarPet( Pet pet) {
-        System.out.print("Nome do Pet: ");
-//        String nome = sc.nextLine();
+    public static void cadastrarPet(Scanner sc, Pet pet) {
+        System.out.print("Digite o nome do pet: ");
+        pet.setNome(sc.nextLine());
+
+        System.out.print("Qual o tipo do pet (CACHORRO/GATO)? ");
+        pet.setTipopet(TipoPet.valueOf(sc.nextLine()));
+
+        System.out.print("Qual o sexo do pet (FEMEA/MACHO)? ");
+        pet.setSexoPet(SexoPet.valueOf(sc.nextLine()));
+
+
+        System.out.print("Qual a idade: ");
+        pet.setIdade(sc.nextInt());
+        sc.nextLine();
+
+        System.out.print("Qual o endereço: ");
+
+//        pet.setEndereco(sc.nextLine());
+
+
         try {
             Path diretorioBase = Path.of("petsCadastrados");
             Files.createDirectories(diretorioBase);
@@ -96,7 +81,7 @@ public class PetRepository {
 //6 - 5kg
 //7 - Siames
 
-    public static class LeitorArquivos extends SimpleFileVisitor<Path> {
+    public static class listarTodos extends SimpleFileVisitor<Path> {
 
         @Override
         public FileVisitResult visitFile(Path arquivo, BasicFileAttributes attrs) {
@@ -129,12 +114,20 @@ public class PetRepository {
 
 
     public static void alterarPet(Scanner sc) {
-
-
+        System.out.println("O que você gostaria de alterar?");
+        System.out.print("1 - NOME");
+        System.out.print("2 - ");
+        System.out.print("Qual o sexo do pet (FEMEA/MACHO)? ");
+        System.out.print("Qual a idade: ");
+        sc.nextLine();
+        System.out.print("Qual o endereço: ");
+//        pet.setNome(sc.nextLine());
 
     }
     public static void deletarPet(Scanner sc) { /* ... */ }
-    public static void listarPorCriterio(Scanner sc) { /* ... */ }
+    public static void buscarPet(Scanner sc) {
+
+    }
 
 
 }

@@ -13,31 +13,78 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
+import static repository.PetRepository.*;
+
 public class SistemaPet {
 
     public static void main(String[] args) {
+
+
+
+
         PetService petService = new PetService();
         PetRepository petRepository = new PetRepository();
         Endereco endereco = new Endereco("Limao",10,"MG","Xique-xique");
         Pet pet = new Pet("Pedro",20,10, TipoPet.CACHORRO, SexoPet.FEMEA,endereco);
-        Scanner leitor = new Scanner(System.in);
-
-        PetRepository.cadastrarPet(pet);
-
-
-
-
-
         Path pastaInicial = Paths.get("./petsCadastrados");
 
 
 
 
-        try {
-            Files.walkFileTree(pastaInicial, new PetRepository.LeitorArquivos());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+
+
+
+    Scanner leitor = new Scanner(System.in);
+    int opcao = 0;
+
+        do {
+        exibirMenu();
+        opcao = leitor.nextInt();
+        leitor.nextLine();
+
+        switch (opcao) {
+            case 1:
+                Pet p = new Pet();
+                cadastrarPet(leitor, p);
+                break;
+            case 2:
+                alterarPet(leitor);
+                break;
+            case 3:
+                deletarPet(leitor);
+                break;
+            case 4:
+                try {
+                    Files.walkFileTree(pastaInicial, new PetRepository.listarTodos());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                break;
+            case 5:
+                buscarPet(leitor);
+                break;
+            case 0:
+                System.out.println("Encerrando o sistema...");
+                break;
+            default:
+                System.out.println("Opção inválida! Tente novamente.");
         }
+    } while (opcao != 0);
+
+        leitor.close();
+
+
+
+
+
+
+
+
+
+
+
 
 
 //        try {

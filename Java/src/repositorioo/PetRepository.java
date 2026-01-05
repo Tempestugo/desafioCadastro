@@ -11,7 +11,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //File, FileWriter, BufferedWrite
 // Métodos para escrever o arquivo do Pet (Passo 4),
@@ -83,8 +86,7 @@ public class PetRepository {
 
     public static class listarTodos extends SimpleFileVisitor<Path> {
 
-        @Override
-        public FileVisitResult visitFile(Path arquivo, BasicFileAttributes attrs) {
+        public FileVisitResult visitFile(Path arquivo) {
 
             if (arquivo.toString().endsWith(".txt")) {
                 System.out.println("--- Lendo: " + arquivo.getFileName() + " ---");
@@ -192,28 +194,67 @@ public class PetRepository {
 //
 //        }
         }
-    public static void buscarPets(List<Pet> listaOriginal, String nome, String raca, Integer idade, SexoPet sexo) {
-        List<Pet> listaDePets;
 
 
 
+//        System.out.print("Digite o nome do pet: ");
+//        pet.setNome(sc.nextLine());
+//
+//        System.out.print("Qual o tipo do pet (CACHORRO/GATO)? ");
+//        pet.setTipopet(TipoPet.valueOf(sc.nextLine()));
+//
+//        System.out.print("Qual o sexo do pet (FEMEA/MACHO)? ");
+//        pet.setSexoPet(SexoPet.valueOf(sc.nextLine()));
+//
+//
+//        System.out.print("Qual a idade: ");
+//        pet.setIdade(sc.nextInt());
+//        sc.nextLine();
+//
+//        System.out.print("Qual o endereço: ");
+//
+//        System.out.println("Qual a raça: ");
+//        pet.setRaca(sc.nextLine());
+
+    private Pet converterArquivoParaPet(Path caminhoArquivo) {
+        try {
+            List<String> linhas = Files.readAllLines(caminhoArquivo);
 
 
-        List<Pet> resultado = listaOriginal.stream()
-                .filter(p -> nome == null || nome.isEmpty() || p.getNome().equalsIgnoreCase(nome))
+            String nomeCompleto = linhas.get(0).split("-")[1].trim();
+            String tipo = linhas.get(1).split("-")[1].trim();
+            String sexo = linhas.get(2).split("-")[1].trim();
+            String idade = linhas.get(3).split("-")[1].trim();
+            String endereco = linhas.get(4).split("-")[1].trim();
+            String raca = linhas.get(5).split("-")[1].trim();
 
-                .filter(p -> raca == null || raca.isEmpty() || p.getRaca().equalsIgnoreCase(raca))
 
-                .filter(p -> idade == null || idade <= 0 || p.getIdade() == idade)
 
-                .filter(p -> sexo == null || sexo.describeConstable().isEmpty()  || !p.getSexoPet().equals(sexo))
+            return new Pet(nomeCompleto, tipo, sexo,idade,endereco,raca);
 
-                .toList();
+        } catch (IOException e) {
+            System.err.println("Erro ao ler arquivo: " + caminhoArquivo);
+            return null;
+        }
+    }
 
-        if (resultado.isEmpty()) {
-            System.out.println("Nenhum pet encontrado com esses critérios.");
-        } else {
-            resultado.forEach(p -> System.out.println("Encontrado: " + p.getNome() + " - " + p.getRaca()));
+
+    public List<Pet> buscarTodos() {
+        Path pastaInicial = Paths.get("./petsCadastrados");
+
+        try (Stream<Path> streamDeArquivos = Files.walk(pastaInicial)) {
+            return streamDeArquivos
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".txt"))
+
+                    .map(this::converterArquivoParaPet)
+
+                    .filter(Objects::nonNull)
+
+                    .collect(Collectors.toList());
+
+        } catch (IOException e) {
+            return List.of();
         }
     }
 

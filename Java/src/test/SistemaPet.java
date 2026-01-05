@@ -28,7 +28,10 @@ public class SistemaPet {
         Endereco endereco = new Endereco("Limao",10,"MG","Xique-xique");
         Pet pet = new Pet("Pedro",20,10, TipoPet.CACHORRO, SexoPet.FEMEA,endereco,"Golden");
         Path pastaInicial = Paths.get("./petsCadastrados");
+        listarTodos listarTodos = new listarTodos();
 
+
+        listarTodos.visitFile(pastaInicial);
 
 
 
@@ -56,12 +59,16 @@ public class SistemaPet {
                 deletarPet(leitor);
                 break;
             case 4:
-                try {
-                    Files.walkFileTree(pastaInicial, new PetRepository.listarTodos());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                System.out.println("\n--- LISTA DE TODOS OS PETS ---");
+                Pet petService = new Pet();
+                List<Pet> todosOsPets = petService.listarTodos();
 
+                if (todosOsPets.isEmpty()) {
+                    System.out.println("Nenhum pet cadastrado no momento.");
+                } else {
+
+                    todosOsPets.forEach(System.out::println);
+                }
                 break;
             case 5:
                 System.out.println("\n--- FILTROS DE BUSCA (Aperte ENTER para pular um filtro) ---");

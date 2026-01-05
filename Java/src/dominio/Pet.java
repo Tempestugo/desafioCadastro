@@ -28,7 +28,7 @@ public class Pet {
         this.raca = raca;
     }
 
-    public Pet() {
+    public Pet(String nomeCompleto, String tipo, String sexo, String idade, String endereco, String raca) {
 
     }
 

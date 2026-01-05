@@ -4,16 +4,17 @@ import dominio.Endereco;
 import dominio.Pet;
 import dominio.SexoPet;
 import dominio.TipoPet;
-import repository.PetRepository;
+import repositorioo.PetRepository;
 import service.PetService;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
 
-import static repository.PetRepository.*;
+import static repositorioo.PetRepository.*;
 
 public class SistemaPet {
 
@@ -25,7 +26,7 @@ public class SistemaPet {
         PetService petService = new PetService();
         PetRepository petRepository = new PetRepository();
         Endereco endereco = new Endereco("Limao",10,"MG","Xique-xique");
-        Pet pet = new Pet("Pedro",20,10, TipoPet.CACHORRO, SexoPet.FEMEA,endereco);
+        Pet pet = new Pet("Pedro",20,10, TipoPet.CACHORRO, SexoPet.FEMEA,endereco,"Golden");
         Path pastaInicial = Paths.get("./petsCadastrados");
 
 
@@ -63,7 +64,21 @@ public class SistemaPet {
 
                 break;
             case 5:
-                buscarPet(leitor);
+                System.out.println("\n--- FILTROS DE BUSCA (Aperte ENTER para pular um filtro) ---");
+
+                System.out.print("Filtrar por Nome: ");
+                String nomeFiltro = leitor.nextLine();
+
+                System.out.print("Filtrar por Raça: ");
+                String racaFiltro = leitor.nextLine();
+
+                System.out.print("Filtrar por Idade (ou 0 para pular): ");
+                String idadeInput = leitor.nextLine();
+                int idadeFiltro = idadeInput.isEmpty() ? 0 : Integer.parseInt(idadeInput);
+
+//                List<Pet> todosOsPets = carregarPetsDosArquivos();
+//                aplicarFiltros(todosOsPets, nomeFiltro, racaFiltro, idadeFiltro);
+
                 break;
             case 0:
                 System.out.println("Encerrando o sistema...");

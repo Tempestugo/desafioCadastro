@@ -1,5 +1,7 @@
 package dominio;
 
 public enum SexoPet {
-    MACHO, FEMEA
+    MACHO, FEMEA;
+
+
 }

@@ -5,17 +5,27 @@ public class Pet {
     private int idade;
     private int peso;
     private TipoPet Tipopet;
+    private String raca;
     private SexoPet sexoPet;
     private Endereco endereco;
 
 
-    public Pet(String nome, int idade, int peso, TipoPet tipopet, SexoPet sexoPet, Endereco endereco) {
+    public Pet(String nome, int idade, int peso, TipoPet tipopet, SexoPet sexoPet, Endereco endereco,String raca) {
         this.nome = nome;
         this.idade = idade;
         this.peso = peso;
         Tipopet = tipopet;
         this.sexoPet = sexoPet;
         this.endereco = endereco;
+        this.raca = raca;
+    }
+
+    public String getRaca() {
+        return raca;
+    }
+
+    public void setRaca(String raca) {
+        this.raca = raca;
     }
 
     public Pet() {

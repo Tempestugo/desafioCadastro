@@ -1,20 +1,18 @@
-package repository;
+package repositorioo;
 
 
 import dominio.Pet;
 import dominio.SexoPet;
 import dominio.TipoPet;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
+
 //File, FileWriter, BufferedWrite
 // Métodos para escrever o arquivo do Pet (Passo 4),
 // ler o arquivo formulario.txt (Passo 1), listar os arquivos da pasta e deletar arquivos.
@@ -53,6 +51,8 @@ public class PetRepository {
 
         System.out.print("Qual o endereço: ");
 
+        System.out.println("Qual a raça: ");
+        pet.setRaca(sc.nextLine());
 //        pet.setEndereco(sc.nextLine());
 
 
@@ -85,7 +85,7 @@ public class PetRepository {
 
         @Override
         public FileVisitResult visitFile(Path arquivo, BasicFileAttributes attrs) {
-            // Filtra apenas arquivos .txt
+
             if (arquivo.toString().endsWith(".txt")) {
                 System.out.println("--- Lendo: " + arquivo.getFileName() + " ---");
                 try {
@@ -114,20 +114,111 @@ public class PetRepository {
 
 
     public static void alterarPet(Scanner sc) {
-        System.out.println("O que você gostaria de alterar?");
-        System.out.print("1 - NOME");
-        System.out.print("2 - ");
-        System.out.print("Qual o sexo do pet (FEMEA/MACHO)? ");
-        System.out.print("Qual a idade: ");
+        String opcao = "";
+//        do {
+            System.out.println("O que você gostaria de alterar?");
+            System.out.print("1 - NOME");
+            System.out.print("2 - TIPO");
+            System.out.print("3- SEXO (FEMEA/MACHO)? ");
+            System.out.print("4 - IDADE");
+            System.out.println("5 - ENDERECO");
+
+//
+//            switch(opcao){
+//                case 1:
+//                    pet.setNome(sc.nextLine());
+//
+//
+//            }
+//        }
+
+
+        System.out.println("Qual o próximo item?");
+
+        String s = sc.nextLine().toUpperCase();
+        if(s.equals("SIM")){
+
+        }
+
+
+
         sc.nextLine();
         System.out.print("Qual o endereço: ");
 //        pet.setNome(sc.nextLine());
 
     }
-    public static void deletarPet(Scanner sc) { /* ... */ }
+    public static void deletarPet(Scanner sc) { }
+
+
+
+//    Nome ou sobrenome
+//            Sexo
+//    Idade
+//            Peso
+//    Raça
+//            Endereço
+
+//    Nome e / ou sobrenome E IDADE
+//    Idade E peso
+
+
+
+//
+//    O usuário PRIMEIRAMENTE e SEMPRE deverá escolher o critério TIPO DE ANIMAL.
+//    O formato de resposta, deverá exibir SEMPRE uma lista de possiveis resultados, por exemplo:
+//            1.  Rex - Cachorro - Macho  - Rua 1, 123 - Cidade 1 - 2 anos - 5kg - Vira-lata
+//2.  Florzinha da Silva - Gato - Femea - Rua 2, 456 - Seilandia - 6 anos - 5kg - Siames
+//    Caso o usuário escolha por exemplo, NOME, os resultados da busca devem trazer PARTES do nome, por exemplo, caso ele pesquise por FLOR, deverá trazer o caso 2 citado anteriormente.
+//    Toda busca deverá ser case-sensitive, ou seja, ignorar maiuscula e minuscula (tratando como iguais) e acentos.
     public static void buscarPet(Scanner sc) {
+        String opcao = "";
+
+
+//        do{
+//            System.out.println("Você gostaria de buscar por qual critério?");
+//            System.out.print("1 - NOME");
+//            System.out.print("2 - TIPO");
+//            System.out.print("3- SEXO (FEMEA/MACHO)? ");
+//            System.out.print("4 - IDADE");
+//            System.out.println("5 - ENDERECO");
+//
+//                        switch(opcao){
+//                            case 1:
+//
+//
+//
+//            }
+//
+//
+//        }
+        }
+    public static void buscarPets(List<Pet> listaOriginal, String nome, String raca, Integer idade, SexoPet sexo) {
+        List<Pet> listaDePets;
+
+
+
+
+
+        List<Pet> resultado = listaOriginal.stream()
+                .filter(p -> nome == null || nome.isEmpty() || p.getNome().equalsIgnoreCase(nome))
+
+                .filter(p -> raca == null || raca.isEmpty() || p.getRaca().equalsIgnoreCase(raca))
+
+                .filter(p -> idade == null || idade <= 0 || p.getIdade() == idade)
+
+                .filter(p -> sexo == null || sexo.describeConstable().isEmpty()  || !p.getSexoPet().equals(sexo))
+
+                .toList();
+
+        if (resultado.isEmpty()) {
+            System.out.println("Nenhum pet encontrado com esses critérios.");
+        } else {
+            resultado.forEach(p -> System.out.println("Encontrado: " + p.getNome() + " - " + p.getRaca()));
+        }
+    }
+
 
     }
 
 
-}
+

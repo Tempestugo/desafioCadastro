@@ -20,6 +20,10 @@ public class Pet {
         this.raca = raca;
     }
 
+    public Pet() {
+
+    }
+
     public String getRaca() {
         return raca;
     }

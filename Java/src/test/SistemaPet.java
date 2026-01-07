@@ -15,28 +15,16 @@ import java.util.List;
 import java.util.Scanner;
 
 import static repositorioo.PetRepository.*;
+import static service.PetService.*;
 
 public class SistemaPet {
 
     public static void main(String[] args) {
 
-
-
-
-        PetService petService = new PetService();
         PetRepository petRepository = new PetRepository();
         Endereco endereco = new Endereco("Limao",10,"MG","Xique-xique");
         Pet pet = new Pet("Pedro",20,10, TipoPet.CACHORRO, SexoPet.FEMEA,endereco,"Golden");
         Path pastaInicial = Paths.get("./petsCadastrados");
-        listarTodos listarTodos = new listarTodos();
-
-
-        listarTodos.visitFile(pastaInicial);
-
-
-
-
-
 
 
     Scanner leitor = new Scanner(System.in);
@@ -59,32 +47,20 @@ public class SistemaPet {
                 deletarPet(leitor);
                 break;
             case 4:
-                System.out.println("\n--- LISTA DE TODOS OS PETS ---");
-                Pet petService = new Pet();
-                List<Pet> todosOsPets = petService.listarTodos();
+                PetService petService1 = new PetService();
+                System.out.println("--- Lista de Pets ---");
+                List<Pet> pets = petService1.buscarTodos();
 
-                if (todosOsPets.isEmpty()) {
-                    System.out.println("Nenhum pet cadastrado no momento.");
+                if (pets.isEmpty()) {
+                    System.out.println("Nenhum pet cadastrado.");
                 } else {
-
-                    todosOsPets.forEach(System.out::println);
+                    pets.forEach(pe -> System.out.println(pe));
                 }
                 break;
             case 5:
-                System.out.println("\n--- FILTROS DE BUSCA (Aperte ENTER para pular um filtro) ---");
+                PetService petService = new PetService();
 
-                System.out.print("Filtrar por Nome: ");
-                String nomeFiltro = leitor.nextLine();
-
-                System.out.print("Filtrar por Raça: ");
-                String racaFiltro = leitor.nextLine();
-
-                System.out.print("Filtrar por Idade (ou 0 para pular): ");
-                String idadeInput = leitor.nextLine();
-                int idadeFiltro = idadeInput.isEmpty() ? 0 : Integer.parseInt(idadeInput);
-
-//                List<Pet> todosOsPets = carregarPetsDosArquivos();
-//                aplicarFiltros(todosOsPets, nomeFiltro, racaFiltro, idadeFiltro);
+                menuBusca(leitor, petService);
 
                 break;
             case 0:
@@ -98,17 +74,6 @@ public class SistemaPet {
         leitor.close();
 
 
-
-
-
-
-
-
-
-
-
-
-
 //        try {
 //            petService.executarCadastro(leitor);
 //        } catch (RegraDeNegocioException e) {
@@ -116,6 +81,65 @@ public class SistemaPet {
 //
 //        }
     }
+    public static void menuBusca(Scanner scanner, PetService petService) {
+        System.out.println("\n--- BUSCA DE PETS ---");
 
+        System.out.println("Qual o tipo de animal? (1-Cachorro, 2-Gato)");
+        int inputTipo = scanner.nextInt();
+        scanner.nextLine();
+
+        TipoPet tipoSelecionado = null;
+
+        switch (inputTipo) {
+            case 1:
+                tipoSelecionado = TipoPet.GATO;
+                break;
+            case 2:
+                tipoSelecionado = TipoPet.CACHORRO;
+                break;
+            default:
+                System.out.println("Opção inválida. O tipo será ignorado na busca.");
+        }
+
+        System.out.println("Digite o NOME (ou Enter para ignorar):");
+        String nome = scanner.nextLine();
+        if (nome.isBlank()) nome = null;
+
+        System.out.println("Digite a RAÇA (ou Enter para ignorar):");
+        String raca = scanner.nextLine();
+        if (raca.isBlank()) raca = null;
+
+        System.out.println("Digite a IDADE (ou 0 para ignorar):");
+        String idadeStr = scanner.nextLine();
+        Integer idade = null;
+        if (!idadeStr.isBlank()) {
+            idade = Integer.parseInt(idadeStr);
+            if (idade == 0) idade = null;
+        }
+
+        SexoPet sexoPet = null;
+
+        switch (inputTipo) {
+            case 1:
+                sexoPet = SexoPet.FEMEA;
+                break;
+            case 2:
+                sexoPet = SexoPet.MACHO;
+                break;
+            default:
+                System.out.println("Opção inválida. O tipo será ignorado na busca.");
+        }
+
+
+
+        List<Pet> petsEncontrados = petService.buscarPets(nome,raca,idade,sexoPet);
+
+        if (petsEncontrados.isEmpty()) {
+            System.out.println("Nenhum pet encontrado com esses critérios.");
+        } else {
+            System.out.println("\nResultados Encontrados:");
+            petsEncontrados.forEach(System.out::println);
+        }
+    }
 
 }

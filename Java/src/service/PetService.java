@@ -1,5 +1,6 @@
 package service;
 
+import dominio.Endereco;
 import dominio.Pet;
 import dominio.SexoPet;
 import dominio.TipoPet;
@@ -33,7 +34,22 @@ public class PetService {
         pet.setIdade(sc.nextInt());
         sc.nextLine();
 
-        System.out.print("Qual o endereço: ");
+        System.out.print("Qual o endereço (rua primeiro): ");
+        Endereco endereco = new Endereco("",0,"","");
+        endereco.setRua(sc.nextLine());
+
+        System.out.println("Qual o número?");
+        endereco.setNumero(sc.nextInt());
+
+        System.out.println("Qual o bairro?");
+        endereco.setBairro(sc.nextLine());
+
+        System.out.println("Qual a cidade?");
+        endereco.setCidade(sc.nextLine());
+
+        pet.setEndereco(endereco);
+
+
 
         System.out.println("Qual a raça: ");
         pet.setRaca(sc.nextLine());
@@ -48,7 +64,8 @@ public class PetService {
 
 
             Files.writeString(caminhoFinal, "1 - " + pet.getNome() + "\n" + "2 - " + pet.getTipopet() + "\n" + "3 - " + pet.getSexoPet() + "\n" +
-                    "4 - " + pet.getEndereco() + "\n" + "5 - " + pet.getIdade() + " anos" + "\n" +
+                    "4 - " + pet.getEndereco().toString().replace("{"," ").replace("}","")
+                    + "\n" + "5 - " + pet.getIdade() + " anos" + "\n" +
                     "6 - " + pet.getPeso() + "kg" + "\n" + "7 - " + pet.getTipopet());
 
         } catch (IOException e) {

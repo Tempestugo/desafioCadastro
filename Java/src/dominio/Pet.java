@@ -20,6 +20,10 @@ public class Pet {
         this.raca = raca;
     }
 
+    public Pet(String nome, int idade, double peso, TipoPet tipo, SexoPet sexo, Endereco endereco, String raca) {
+
+    }
+
     public Pet() {
 
     }

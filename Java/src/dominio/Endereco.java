@@ -14,6 +14,9 @@ public class Endereco {
         this.bairro = bairro;
     }
 
+    public Endereco(String endereco, Object o, String nãoInformado) {
+    }
+
 
     @Override
     public String toString() {

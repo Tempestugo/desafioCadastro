@@ -4,11 +4,10 @@ import dominio.Endereco;
 import dominio.Pet;
 import dominio.SexoPet;
 import dominio.TipoPet;
+import exceptions.IdadeInvalidaException;
 import repositorioo.PetRepository;
 import service.PetService;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -82,6 +81,7 @@ public class SistemaPet {
 //
 //        }
     }
+
     public static void menuBusca(Scanner scanner, PetService petService) {
         System.out.println("\n--- BUSCA DE PETS ---");
 
@@ -90,7 +90,6 @@ public class SistemaPet {
         scanner.nextLine();
 
         TipoPet tipoSelecionado = null;
-
         switch (inputTipo) {
             case 1:
                 tipoSelecionado = TipoPet.GATO;
@@ -99,7 +98,7 @@ public class SistemaPet {
                 tipoSelecionado = TipoPet.CACHORRO;
                 break;
             default:
-                System.out.println("Opção inválida. O tipo será ignorado na busca.");
+                System.out.println("Opção inválida. A busca pode não trazer resultados exatos.");
         }
 
         System.out.println("Digite o NOME (ou Enter para ignorar):");
@@ -110,30 +109,41 @@ public class SistemaPet {
         String raca = scanner.nextLine();
         if (raca.isBlank()) raca = null;
 
-        System.out.println("Digite a IDADE (ou 0 para ignorar):");
+        System.out.println("Digite a IDADE (ou Enter para ignorar):");
         String idadeStr = scanner.nextLine();
         Integer idade = null;
         if (!idadeStr.isBlank()) {
-            idade = Integer.parseInt(idadeStr);
-            if (idade == 0) idade = null;
+            try {
+                idade = Integer.parseInt(idadeStr);
+                if (idade == 0) idade = null;
+            } catch (IdadeInvalidaException e) {
+                System.out.println("Idade inválida, ignorando filtro de idade.");
+            }
         }
 
         SexoPet sexoPet = null;
+        System.out.println("Qual o sexo? (1-Macho, 2-Fêmea, ou Enter para ignorar):");
+        String sexoStr = scanner.nextLine();
 
-        switch (inputTipo) {
-            case 1:
-                sexoPet = SexoPet.FEMEA;
-                break;
-            case 2:
-                sexoPet = SexoPet.MACHO;
-                break;
-            default:
-                System.out.println("Opção inválida. O tipo será ignorado na busca.");
+        if (!sexoStr.isBlank()) {
+            try {
+                int inputSexo = Integer.parseInt(sexoStr);
+                switch (inputSexo) {
+                    case 1:
+                        sexoPet = SexoPet.MACHO;
+                        break;
+                    case 2:
+                        sexoPet = SexoPet.FEMEA;
+                        break;
+                    default:
+                        System.out.println("Opção de sexo inválida, ignorando este filtro.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada inválida, ignorando filtro de sexo.");
+            }
         }
 
-
-
-        List<Pet> petsEncontrados = petService.buscarPets(nome,raca,idade,sexoPet);
+        List<Pet> petsEncontrados = petService.buscarPets(tipoSelecionado, nome, raca, idade, sexoPet);
 
         if (petsEncontrados.isEmpty()) {
             System.out.println("Nenhum pet encontrado com esses critérios.");

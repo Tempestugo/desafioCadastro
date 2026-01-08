@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
@@ -127,7 +128,7 @@ public class PetService {
 
 
     public List<Pet> buscarPets(TipoPet tipoSelecionado, String nome, String raca, Integer idade, SexoPet sexo) {
-        List<Pet> todosOsPets = buscarTodos();
+        List<Pet> todosOsPets = carregarPetsDoBanco();
 
         return todosOsPets.stream()
                 .filter(p -> p.getTipopet() == tipoSelecionado)
@@ -204,48 +205,63 @@ public class PetService {
 
             if (linhas.size() < 7) return null;
 
-            // 1 - Nome (Index 0)
-            String nome = linhas.get(0).split("-", 2)[2].trim();
+            String nome = linhas.get(0).split("-", 2)[5].trim();
 
-            String tipoStr = linhas.get(1).split("-", 2)[2].trim();
+            String tipoStr = linhas.get(1).split("-", 2)[5].trim();
             TipoPet tipo = TipoPet.valueOf(tipoStr);
 
-            String sexoStr = linhas.get(2).split("-", 2)[2].trim();
+            String sexoStr = linhas.get(2).split("-", 2)[5].trim();
             SexoPet sexo = SexoPet.valueOf(sexoStr);
 
-            String endereco = linhas.get(3).split("-", 2)[2].trim();
-            String[] dadosEndereco = endereco.split(",");
+            String linhaEndereco = linhas.get(3).split("-", 2)[5].trim();
+            String[] dadosEndereco = linhaEndereco.split(",");
+
             Endereco enderecoObj;
             if (dadosEndereco.length >= 3) {
                 String rua = dadosEndereco.toString().trim();
-                String numero = dadosEndereco[3].trim();
-                String bairroCidade = dadosEndereco[4].trim();
+                int numero = Integer.parseInt(dadosEndereco[5].trim());
+                String bairroCidade = dadosEndereco[6].trim();
 
                 enderecoObj = new Endereco(rua, numero, bairroCidade);
             } else {
-                enderecoObj = new Endereco(endereco, null, "Não informado");
+                enderecoObj = new Endereco(linhaEndereco, 0, "Não informado");
             }
 
-
-
-
-
-            String idadeStr = linhas.get(4).split("-", 2)[2]
+            String idadeStr = linhas.get(4).split("-", 2)[5]
                     .replace(" anos", "")
                     .trim();
             int idade = Integer.parseInt(idadeStr);
 
-            String pesoStr = linhas.get(5).split("-", 2)[2].replace("kg", "").trim();
+            String pesoStr = linhas.get(5).split("-", 2)[5]
+                    .replace("kg", "")
+                    .trim();
             double peso = Double.parseDouble(pesoStr);
 
-            String raca = linhas.get(6).split("-", 2)[2].trim();
+            String raca = linhas.get(6).split("-", 2)[5].trim();
 
-            return new Pet(nome,idade,peso,tipo,sexo,enderecoObj,raca);
+            return new Pet(nome, idade, peso, tipo, sexo, enderecoObj, raca);
 
         } catch (Exception e) {
             System.err.println("Erro ao processar arquivo: " + caminhoArquivo + " | " + e.getMessage());
             return null;
         }
+    }
+
+
+    public List<Pet> carregarPetsDoBanco() {
+        List<Pet> pets = new ArrayList<>();
+        Path pasta = Paths.get("petsCadastrados");
+
+        try (Stream<Path> caminhos = Files.walk(pasta)) {
+            pets = caminhos
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".txt"))
+                    .map(this::converterArquivoParaPet)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            System.out.println("Erro ao ler arquivos: " + e.getMessage());
+        }
+        return pets;
     }
     }
 

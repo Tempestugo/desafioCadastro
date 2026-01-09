@@ -313,8 +313,19 @@ public class PetService {
         Map<Path, Pet> hashMap = new HashMap<>();
         Path pasta = Paths.get("petsCadastrados");
 
-        try(Stream<Path> caminhos = Files.walk(pasta)){
+        try(Stream<Path> caminhos = Files.walk(pasta)) {
+            caminhos
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".txt"))
+                    .forEach(path ->    {Pet pet = converterArquivoParaPet(path);
+                        if(pet != null){
+                            hashMap.put(path, pet);
 
+                        }
+
+                    });
+
+return hashMap;
         }
         catch (IOException e){
             System.out.println(e.getMessage());

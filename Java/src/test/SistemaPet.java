@@ -20,66 +20,9 @@ public class SistemaPet {
 
     public static void main(String[] args) {
 
+    }
 
-        PetRepository petRepository = new PetRepository();
-        Endereco endereco = new Endereco("Limao",10,"MG","Xique-xique");
-        Pet pet = new Pet("Pedro",20,10, TipoPet.CACHORRO, SexoPet.FEMEA,endereco,"Golden");
-        Path pastaInicial = Paths.get("./petsCadastrados");
-
-
-    Scanner leitor = new Scanner(System.in);
-    int opcao = 0;
-
-        do {
-        exibirMenu();
-        opcao = leitor.nextInt();
-        leitor.nextLine();
-
-        switch (opcao) {
-            case 1:
-                Pet p = new Pet();
-                cadastrarPet(leitor, p);
-                break;
-            case 2:
-                alterarPet(leitor);
-                break;
-            case 3:
-                deletarPet(leitor);
-                break;
-            case 4:
-                PetService petService1 = new PetService();
-                System.out.println("--- Lista de Pets ---");
-                List<Pet> pets = petService1.buscarTodos();
-
-                if (pets.isEmpty()) {
-                    System.out.println("Nenhum pet cadastrado.");
-                } else {
-                    pets.forEach(pe -> System.out.println(pe));
-                }
-                break;
-            case 5:
-                PetService petService = new PetService();
-
-                menuBusca(leitor, petService);
-
-                break;
-            case 0:
-                System.out.println("Encerrando o sistema...");
-                break;
-            default:
-                System.out.println("Opção inválida! Tente novamente.");
-        }
-    } while (opcao != 0);
-
-        leitor.close();
-
-
-//        try {
-//            petService.executarCadastro(leitor);
-//        } catch (RegraDeNegocioException e) {
-//            System.out.println("Erro ao cadastrar: " + e.getMessage());
-//
-//        }
+    private static void deletar(Scanner leitor) {
     }
 
     public static void menuBusca(Scanner scanner, PetService petService) {
@@ -92,10 +35,10 @@ public class SistemaPet {
         TipoPet tipoSelecionado = null;
         switch (inputTipo) {
             case 1:
-                tipoSelecionado = TipoPet.GATO;
+                tipoSelecionado = TipoPet.CACHORRO;
                 break;
             case 2:
-                tipoSelecionado = TipoPet.CACHORRO;
+                tipoSelecionado = TipoPet.GATO;
                 break;
             default:
                 System.out.println("Opção inválida. A busca pode não trazer resultados exatos.");

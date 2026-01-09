@@ -2,15 +2,15 @@ package dominio;
 
 public class Pet {
     private String nome;
-    private int idade;
-    private int peso;
+    private double idade;
+    private double peso;
     private TipoPet Tipopet;
     private String raca;
     private SexoPet sexoPet;
     private Endereco endereco;
 
 
-    public Pet(String nome, int idade, int peso, TipoPet tipopet, SexoPet sexoPet, Endereco endereco,String raca) {
+    public Pet(String nome, double idade, double peso, TipoPet tipopet, SexoPet sexoPet, Endereco endereco, String raca) {
         this.nome = nome;
         this.idade = idade;
         this.peso = peso;
@@ -20,9 +20,6 @@ public class Pet {
         this.raca = raca;
     }
 
-    public Pet(String nome, int idade, double peso, TipoPet tipo, SexoPet sexo, Endereco endereco, String raca) {
-
-    }
 
     public Pet() {
 
@@ -82,15 +79,15 @@ public class Pet {
         this.nome = nome;
     }
 
-    public int getIdade() {
+    public double getIdade() {
         return idade;
     }
 
-    public void setIdade(int idade) {
+    public void setIdade(double idade) {
         this.idade = idade;
     }
 
-    public int getPeso() {
+    public double getPeso() {
         return peso;
     }
 

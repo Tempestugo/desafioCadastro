@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -49,36 +50,31 @@ public class PetService {
         pet.setTipopet(TipoPet.valueOf(sc.nextLine()));
 
 
-
-
         System.out.print("Qual o sexo do pet (FEMEA/MACHO)? ");
         pet.setSexoPet(SexoPet.valueOf(sc.nextLine()));
-
 
 
         String petIdade = null;
         System.out.print("Qual a idade: ");
         pet.setIdade(sc.nextInt());
-        if(pet.getIdade() > 20){
+        if (pet.getIdade() > 20) {
             throw new IdadeInvalidaException("A idade é inválida, maior que 20");
         }
-        if(pet.getIdade() < 1){
+        if (pet.getIdade() < 1) {
             double idadeMeses = pet.getIdade() * 10;
             petIdade = pet.getIdade() + " Meses";
 
-        }else{
-             petIdade = pet.getIdade() +" anos";
+        } else {
+            petIdade = pet.getIdade() + " anos";
 
         }
         sc.nextLine();
 
 
-
-
         System.out.print("Qual o endereço (rua primeiro): ");
-        Endereco endereco = new Endereco("",0,"","");
+        Endereco endereco = new Endereco("", 0, "", "");
         endereco.setRua(sc.nextLine());
-        if(endereco.getRua() == null){
+        if (endereco.getRua() == null) {
             endereco.setRua(constante);
         }
 
@@ -98,16 +94,15 @@ public class PetService {
 
         System.out.println("Qual o peso do pet? ");
         pet.setPeso(sc.nextInt());
-        if(pet.getPeso() > 60 || pet.getPeso() <0.5){
+        if (pet.getPeso() > 60 || pet.getPeso() < 0.5) {
             throw new PesoInvalidoException("O peso é maior que 60 ou menor que 0.5");
         }
         sc.nextLine();
 
 
-
         System.out.println("Qual a raça: ");
         pet.setRaca(sc.nextLine());
-        if(pet.getRaca() == null){
+        if (pet.getRaca() == null) {
             pet.setRaca(constante);
         }
 
@@ -116,7 +111,7 @@ public class PetService {
             Path diretorioBase = Path.of("petsCadastrados");
             Files.createDirectories(diretorioBase);
 
-            Path caminhoFinal = diretorioBase.resolve("petsCadastrados" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + pet.getNome().toUpperCase()+".txt");
+            Path caminhoFinal = diretorioBase.resolve("petsCadastrados" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")) + pet.getNome().toUpperCase() + ".txt");
 
 
             Files.writeString(caminhoFinal, "1 - " + pet.getNome() + "\n" + "2 - " + pet.getTipopet() + "\n" + "3 - " + pet.getSexoPet() + "\n" +
@@ -200,7 +195,7 @@ public class PetService {
 
 
         try {
-            Files.delete(Path.of("./petsCadastrados"+collect));
+            Files.delete(Path.of("./petsCadastrados" + collect));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -268,7 +263,6 @@ public class PetService {
             double idade = Double.parseDouble(idadeStr);
 
 
-
             String pesoStr = linhas.get(5)
                     .split(" - ", 2)[1]
                     .toLowerCase()
@@ -309,30 +303,72 @@ public class PetService {
         return pets;
     }
 
-    public Map<Path,Pet> carregatPetsDoBancoMap(){
+    public Map<Path, Pet> carregatPetsDoBancoMap() {
         Map<Path, Pet> hashMap = new HashMap<>();
         Path pasta = Paths.get("petsCadastrados");
 
-        try(Stream<Path> caminhos = Files.walk(pasta)) {
+        try (Stream<Path> caminhos = Files.walk(pasta)) {
             caminhos
                     .filter(Files::isRegularFile)
                     .filter(p -> p.toString().endsWith(".txt"))
-                    .forEach(path ->    {Pet pet = converterArquivoParaPet(path);
-                        if(pet != null){
+                    .forEach(path -> {
+                        Pet pet = converterArquivoParaPet(path);
+                        if (pet != null) {
                             hashMap.put(path, pet);
 
                         }
 
                     });
 
-return hashMap;
-        }
-        catch (IOException e){
+            return hashMap;
+        } catch (IOException e) {
             System.out.println(e.getMessage());
         }
 
 
-    return hashMap;
+        return hashMap;
     }
+
+
+    public Map<Path, Pet> alterarPet2(Scanner sc) {
+        Map<Path, Pet> pets = carregatPetsDoBancoMap();
+        List<Map.Entry<Path, Pet>> candidatos = new LinkedList<>();
+        pets.entrySet().stream().forEach(pathPetEntry ->
+                candidatos.add(pathPetEntry));
+        int i = -1;
+        for (Map.Entry<Path, Pet> candidato : candidatos) {
+            i++;
+            System.out.println(i + " - " + candidato.getValue().getNome()+" - "+candidato.getValue().getTipopet()+" - "+candidato.getValue().getSexoPet()+" - "
+            +candidato.getValue().getEndereco().getRua()+" "+candidato.getValue().getEndereco().getNumero()+" - "+candidato.getValue().getEndereco().getCidade()+
+                    " - "+candidato.getValue().getIdade()+" - "+candidato.getValue().getPeso()+" - "+candidato.getValue().getRaca());
+
+        }
+        Map.Entry<Path, Pet> pathPetEntry = candidatos.get(sc.nextInt());
+
+        sc.nextLine();
+
+        Pet pet = pathPetEntry.getValue();
+        System.out.println("Digite o NOME (ou Enter para ignorar):");
+        String nome = sc.nextLine();
+        if (!nome.isBlank()){
+            pet.setNome(nome);
+        }
+
+        System.out.println("Digite o Tipo (ou Enter para ignorar):");
+        String tipoStr = sc.nextLine();
+
+        if (!tipoStr.isBlank()) {
+            TipoPet tipoPet = TipoPet.valueOf(tipoStr.toUpperCase());
+            pet.setTipopet(tipoPet);
+        }
+
+
+
+
+
+
+
+        return pets;
     }
+}
 

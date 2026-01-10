@@ -1,7 +1,7 @@
 1 - pepe
 2 - GATO
-3 - MACHO
-4 - ,10,,brala
-5 - 10 anos
-6 - 10kg
+3 - FEMEA
+4 - ,10,,
+5 - 10.0 anos
+6 - 10.0kg
 7 - 

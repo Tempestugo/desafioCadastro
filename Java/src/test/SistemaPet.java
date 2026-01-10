@@ -11,6 +11,7 @@ import service.PetService;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import static repositorioo.PetRepository.*;
@@ -19,11 +20,54 @@ import static service.PetService.*;
 public class SistemaPet {
 
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        PetService service = new PetService();
 
+        int opcao;
+
+        do {
+            exibirMenu();
+            opcao = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (opcao) {
+                case 1:
+                    Pet pet = new Pet();
+                    PetService.cadastrarPet(scanner, pet);
+                    break;
+
+                case 2:
+                    service.alterarPet2(scanner);
+                    break;
+
+                case 3:
+                    service.deletarPet(scanner);
+                    break;
+
+                case 4:
+                    List<Pet> pets = service.buscarTodos();
+                    pets.forEach(System.out::println);
+                    break;
+
+                case 5:
+                    PetService petService = new PetService();
+                    menuBusca(scanner, petService);
+                    break;
+
+                case 0:
+                    System.out.println("Encerrando sistema...");
+                    break;
+
+                default:
+                    System.out.println("Opção inválida");
+            }
+
+        } while (opcao != 0);
+
+        scanner.close();
     }
 
-    private static void deletar(Scanner leitor) {
-    }
+
 
     public static void menuBusca(Scanner scanner, PetService petService) {
         System.out.println("\n--- BUSCA DE PETS ---");
@@ -86,7 +130,8 @@ public class SistemaPet {
             }
         }
 
-        List<Pet> petsEncontrados = petService.buscarPets(tipoSelecionado, nome, raca, idade, sexoPet);
+        List<Map.Entry<Path, Pet>> petsEncontrados = petService.buscarPets(tipoSelecionado, nome, raca, idade, sexoPet);
+
 
         if (petsEncontrados.isEmpty()) {
             System.out.println("Nenhum pet encontrado com esses critérios.");

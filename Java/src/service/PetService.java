@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -131,19 +132,25 @@ public class PetService {
     }
 
 
-    public List<Pet> buscarPets(TipoPet tipoSelecionado, String nome, String raca, Integer idade, SexoPet sexo) {
-        List<Pet> todosOsPets = carregarPetsDoBanco();
+    public List<Map.Entry<Path, Pet>> buscarPets(TipoPet tipoSelecionado, String nome, String raca, Integer idade, SexoPet sexo) {
+        Map<Path,Pet> todosPetsePaths = carregatPetsDoBancoMap();
+        List<Map.Entry<Path, Pet>> candidatos = new LinkedList<>();
+        todosPetsePaths.entrySet().stream()
+                .filter(p -> p.getValue().getTipopet() == tipoSelecionado || tipoSelecionado == null)
 
-        return todosOsPets.stream()
-                .filter(p -> p.getTipopet() == tipoSelecionado)
-
-                .filter(p -> nome == null || nome.isBlank() || p.getNome().toUpperCase().contains(nome.toUpperCase()))
-                .filter(p -> raca == null || raca.isBlank() || p.getRaca().equalsIgnoreCase(raca))
-                .filter(p -> idade == null || idade <= 0 || p.getIdade() == idade)
-                .filter(p -> sexo == null || p.getSexoPet() == sexo)
-
+                .filter(p -> nome == null || nome.isBlank() || p.getValue().getNome().toUpperCase().contains(nome.toUpperCase()))
+                .filter(p -> raca == null || raca.isBlank() || p.getValue().getRaca().equalsIgnoreCase(raca))
+                .filter(p -> idade == null || idade <= 0 || p.getValue().getIdade() == idade)
+                .filter(p -> sexo == null || p.getValue().getSexoPet() == sexo)
                 .collect(Collectors.toList());
+
+
+
+        return candidatos;
+        
+  
     }
+
 
 
     public static void alterarPet(Scanner sc) {
@@ -180,25 +187,70 @@ public class PetService {
 
     }
 
-    public String deletarPet(TipoPet tipoSelecionado, String nome, String raca, Integer idade, SexoPet sexo) {
-        List<Pet> todosOsPets = carregarPetsDoBanco();
+    public String deletarPet(Scanner sc) {
+        System.out.println("=== BUSCA DO PET PARA DELETAR ===");
 
-        List<Pet> collect = todosOsPets.stream()
-                .filter(p -> p.getTipopet() == tipoSelecionado)
+        System.out.println("Tipo do pet (ou Enter para ignorar):");
+        String tipoStr = sc.nextLine();
+        TipoPet tipo = tipoStr.isBlank()
+                ? null
+                : TipoPet.valueOf(tipoStr.toUpperCase());
 
-                .filter(p -> nome == null || nome.isBlank() || p.getNome().toUpperCase().contains(nome.toUpperCase()))
-                .filter(p -> raca == null || raca.isBlank() || p.getRaca().equalsIgnoreCase(raca))
-                .filter(p -> idade == null || idade <= 0 || p.getIdade() == idade)
-                .filter(p -> sexo == null || p.getSexoPet() == sexo)
+        System.out.println("Nome (ou Enter para ignorar):");
+        String nome = sc.nextLine();
 
-                .collect(Collectors.toList());
+        System.out.println("Raça (ou Enter para ignorar):");
+        String raca = sc.nextLine();
+
+        System.out.println("Idade (ou 0 para ignorar):");
+        String idadeStr = sc.nextLine();
+        Integer idade = idadeStr.isBlank() ? null : Integer.parseInt(idadeStr);
+
+        System.out.println("Sexo (ou Enter para ignorar):");
+        String sexoStr = sc.nextLine();
+        SexoPet sexo = sexoStr.isBlank()
+                ? null
+                : SexoPet.valueOf(sexoStr.toUpperCase());
+
+        List<Map.Entry<Path, Pet>> candidatos =
+                buscarPetsParaEdicao(tipo, nome, raca, idade, sexo);
+
+        if (candidatos.isEmpty()) {
+            System.out.println("Nenhum pet encontrado com esses critérios.");
+            return "Nenhum pet encontrado com esses critérios.";
+        }
+
+        int i = -1;
+        for (Map.Entry<Path, Pet> candidato : candidatos) {
+            i++;
+            System.out.println(i + " - " + candidato.getValue().getNome()+" - "+candidato.getValue().getTipopet()+" - "+candidato.getValue().getSexoPet()+" - "
+                    +candidato.getValue().getEndereco().getRua()+" "+candidato.getValue().getEndereco().getNumero()+" - "+candidato.getValue().getEndereco().getCidade()+
+                    " - "+candidato.getValue().getIdade()+" - "+candidato.getValue().getPeso()+" - "+candidato.getValue().getRaca());
+
+        }
 
 
-        try {
-            Files.delete(Path.of("./petsCadastrados" + collect));
+        System.out.print("Escolha o número do pet para deletar: ");
+        int escolha = sc.nextInt();
+        sc.nextLine();
+        Map.Entry<Path, Pet> selecionado = candidatos.get(escolha);
+        Pet pet = selecionado.getValue();
+
+        System.out.println(
+                "Tem certeza que deseja deletar o pet " + pet.getNome() + "? (S/N)"
+        );
+        String confirmacao = sc.nextLine();
+
+        if (!confirmacao.equalsIgnoreCase("S")) {
+            System.out.println("Operação cancelada.");
+            return "Operação Cancelada";
+        }else{   try {
+            Files.delete(Path.of("./petsCadastrados" +selecionado.getKey()));
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
+        }}
+
+
 
 
         return "Arquivo Apagado";
@@ -303,6 +355,107 @@ public class PetService {
         return pets;
     }
 
+
+    public List<Map.Entry<Path, Pet>> buscarPetsParaEdicao(
+            TipoPet tipoSelecionado,
+            String nome,
+            String raca,
+            Integer idade,
+            SexoPet sexo
+    ) {
+
+        Map<Path, Pet> todosPets = carregatPetsDoBancoMap();
+
+        return todosPets.entrySet()
+                .stream()
+
+                .filter(e -> tipoSelecionado == null
+                        || e.getValue().getTipopet() == tipoSelecionado)
+
+
+                .filter(e -> nome == null || nome.isBlank()
+                        || e.getValue().getNome()
+                        .toUpperCase()
+                        .contains(nome.toUpperCase()))
+
+
+                .filter(e -> raca == null || raca.isBlank()
+                        || e.getValue().getRaca()
+                        .equalsIgnoreCase(raca))
+
+                .filter(e -> idade == null || idade <= 0
+                        || e.getValue().getIdade() == idade)
+
+                .filter(e -> sexo == null
+                        || e.getValue().getSexoPet() == sexo)
+
+                .collect(Collectors.toList());
+    }
+    public Map.Entry<Path, Pet> buscarESelecionarPetParaEdicao(Scanner sc) {
+
+        List<Map.Entry<Path, Pet>> candidatos;
+
+        do {
+            System.out.println("\n--- BUSCA DE PET ---");
+
+            System.out.println("Tipo (ou Enter):");
+            String tipoStr = sc.nextLine();
+            TipoPet tipo = tipoStr.isBlank() ? null
+                    : TipoPet.valueOf(tipoStr.toUpperCase());
+
+            System.out.println("Nome (ou Enter):");
+            String nome = sc.nextLine();
+            if (nome.isBlank()) nome = null;
+
+            System.out.println("Raça (ou Enter):");
+            String raca = sc.nextLine();
+            if (raca.isBlank()) raca = null;
+
+            System.out.println("Idade (ou Enter):");
+            String idadeStr = sc.nextLine();
+            Integer idade = idadeStr.isBlank() ? null : Integer.parseInt(idadeStr);
+
+            System.out.println("Sexo (ou Enter):");
+            String sexoStr = sc.nextLine();
+            SexoPet sexo = sexoStr.isBlank() ? null
+                    : SexoPet.valueOf(sexoStr.toUpperCase());
+
+            candidatos = buscarPetsParaEdicao(tipo, nome, raca, idade, sexo);
+
+            if (candidatos.isEmpty()) {
+                System.out.println("Nenhum pet encontrado. Tentar novamente? (s/n)");
+                if (!sc.nextLine().equalsIgnoreCase("s")) {
+                    return null;
+                }
+            }
+
+        } while (candidatos.isEmpty());
+
+        int opcao;
+        do {
+            for (int i = 0; i < candidatos.size(); i++) {
+                Pet p = candidatos.get(i).getValue();
+                System.out.println(i + " - " + p.getNome() + " - " + p.getTipopet());
+            }
+
+            System.out.println("Escolha o número:");
+            while (!sc.hasNextInt()) {
+                System.out.println("Digite um número válido.");
+                sc.nextLine();
+            }
+
+            opcao = sc.nextInt();
+            sc.nextLine();
+
+            if (opcao < 0 || opcao >= candidatos.size()) {
+                System.out.println("Número inválido.");
+            }
+
+        } while (opcao < 0 || opcao >= candidatos.size());
+
+        return candidatos.get(opcao);
+    }
+
     public Map<Path, Pet> carregatPetsDoBancoMap() {
         Map<Path, Pet> hashMap = new HashMap<>();
         Path pasta = Paths.get("petsCadastrados");
@@ -330,45 +483,133 @@ public class PetService {
     }
 
 
-    public Map<Path, Pet> alterarPet2(Scanner sc) {
-        Map<Path, Pet> pets = carregatPetsDoBancoMap();
-        List<Map.Entry<Path, Pet>> candidatos = new LinkedList<>();
-        pets.entrySet().stream().forEach(pathPetEntry ->
-                candidatos.add(pathPetEntry));
-        int i = -1;
-        for (Map.Entry<Path, Pet> candidato : candidatos) {
-            i++;
-            System.out.println(i + " - " + candidato.getValue().getNome()+" - "+candidato.getValue().getTipopet()+" - "+candidato.getValue().getSexoPet()+" - "
-            +candidato.getValue().getEndereco().getRua()+" "+candidato.getValue().getEndereco().getNumero()+" - "+candidato.getValue().getEndereco().getCidade()+
-                    " - "+candidato.getValue().getIdade()+" - "+candidato.getValue().getPeso()+" - "+candidato.getValue().getRaca());
+    public String alterarPet2(Scanner sc) {
+        Map.Entry<Path, Pet> entry = buscarESelecionarPetParaEdicao(sc);
+        if (entry == null) return "Método finalizado";
 
-        }
-        Map.Entry<Path, Pet> pathPetEntry = candidatos.get(sc.nextInt());
+        Pet pet = entry.getValue();
+        Path path = entry.getKey();
 
+
+        System.out.println("Escolha o número do pet:");
+        int opcao = sc.nextInt();
         sc.nextLine();
+;
 
-        Pet pet = pathPetEntry.getValue();
         System.out.println("Digite o NOME (ou Enter para ignorar):");
-        String nome = sc.nextLine();
-        if (!nome.isBlank()){
-            pet.setNome(nome);
+        String nome2 = sc.nextLine();
+        if (!nome2.isBlank()){
+            pet.setNome(nome2);
         }
 
         System.out.println("Digite o Tipo (ou Enter para ignorar):");
-        String tipoStr = sc.nextLine();
+        String tipoStr2 = sc.nextLine();
 
-        if (!tipoStr.isBlank()) {
-            TipoPet tipoPet = TipoPet.valueOf(tipoStr.toUpperCase());
+        if (!tipoStr2.isBlank()) {
+            TipoPet tipoPet = TipoPet.valueOf(tipoStr2.toUpperCase());
             pet.setTipopet(tipoPet);
+        }
+
+        System.out.println("Digite o novo sexo do pet (ou Enter para ignorar");
+        String sexoPetStr = sc.nextLine();
+        if(!sexoPetStr.isBlank()){
+            SexoPet sexoPet = SexoPet.valueOf(sexoPetStr.toUpperCase());
+            pet.setSexoPet(sexoPet);
+        }
+        String petIdade = null;
+        System.out.println("Digite a nova Idade (ou Enter para ignorar):");
+        String idadeStr2 = sc.nextLine();
+        if (!idadeStr2.isBlank()) {
+            pet.setIdade(Integer.parseInt(idadeStr2));
+        }
+
+        if (pet.getIdade() > 20) {
+            throw new IdadeInvalidaException("A idade é inválida, maior que 20");
+        }
+        if (pet.getIdade() < 1) {
+            double idadeMeses = pet.getIdade() * 10;
+            petIdade = pet.getIdade() + " Meses";
+
+        } else {
+            petIdade = pet.getIdade() + " anos";
+
+        }
+        sc.nextLine();
+
+
+
+
+
+
+        System.out.print("Qual o endereço (rua primeiro): ");
+        Endereco endereco = pet.getEndereco();
+        String rua = sc.nextLine();
+        if (!rua.isBlank()){
+            endereco.setRua(rua);
+        }
+
+        System.out.println("Qual o número? Ou enter para pular");
+        String numStr = sc.nextLine();
+        if (!numStr.isBlank()) {
+            endereco.setNumero(Integer.parseInt(numStr));
+        }
+
+
+        System.out.println("Qual o bairro?");
+        String bairro = sc.nextLine();
+        if (!endereco.getBairro().isBlank()) {
+            endereco.setBairro(bairro);
+        }
+
+        System.out.println("Qual a cidade?");
+        String cidade = sc.nextLine();
+        if (!endereco.getCidade().isBlank()) {
+            endereco.setCidade(cidade);
+        }
+
+
+        pet.setEndereco(endereco);
+
+
+        System.out.println("Qual o novo peso do pet? ");
+        String pesoStr = sc.nextLine();
+        if (!pesoStr.isBlank()) {
+           pet.setPeso(Double.parseDouble(pesoStr));
+        }
+        if (pet.getPeso() > 60 || pet.getPeso() < 0.5) {
+            throw new PesoInvalidoException("O peso é maior que 60 ou menor que 0.5");
+        }
+
+
+        System.out.println("Qual a raça: ");
+        String raca2 = sc.nextLine();
+        if(!raca2.isBlank()){
+            pet.setRaca(raca2);
         }
 
 
 
 
+        try {
+            Files.writeString(
+                    entry.getKey(),
+                    "1 - " + pet.getNome() + "\n" + "2 - " + pet.getTipopet() + "\n" + "3 - " + pet.getSexoPet() + "\n" +
+                            "4 - " + endereco.getRua() + "," +
+                            endereco.getNumero() + "," +
+                            endereco.getBairro() + "," +
+                            endereco.getCidade()
+
+                            + "\n" + "5 - " + petIdade + "\n" +
+                            "6 - " + pet.getPeso() + "kg" + "\n" + "7 - " + pet.getRaca(),
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
 
-
-        return pets;
+        return "Método finalizado";
     }
 }
 

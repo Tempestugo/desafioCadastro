@@ -187,73 +187,16 @@ public class PetService {
 
     }
 
-    public String deletarPet(Scanner sc) {
-        System.out.println("=== BUSCA DO PET PARA DELETAR ===");
+    public void deletarPet(Scanner sc) {
+        Map.Entry<Path, Pet> entry = buscarESelecionarPetParaEdicao(sc);
+        if (entry == null) return;
 
-        System.out.println("Tipo do pet (ou Enter para ignorar):");
-        String tipoStr = sc.nextLine();
-        TipoPet tipo = tipoStr.isBlank()
-                ? null
-                : TipoPet.valueOf(tipoStr.toUpperCase());
-
-        System.out.println("Nome (ou Enter para ignorar):");
-        String nome = sc.nextLine();
-
-        System.out.println("Raça (ou Enter para ignorar):");
-        String raca = sc.nextLine();
-
-        System.out.println("Idade (ou 0 para ignorar):");
-        String idadeStr = sc.nextLine();
-        Integer idade = idadeStr.isBlank() ? null : Integer.parseInt(idadeStr);
-
-        System.out.println("Sexo (ou Enter para ignorar):");
-        String sexoStr = sc.nextLine();
-        SexoPet sexo = sexoStr.isBlank()
-                ? null
-                : SexoPet.valueOf(sexoStr.toUpperCase());
-
-        List<Map.Entry<Path, Pet>> candidatos =
-                buscarPetsParaEdicao(tipo, nome, raca, idade, sexo);
-
-        if (candidatos.isEmpty()) {
-            System.out.println("Nenhum pet encontrado com esses critérios.");
-            return "Nenhum pet encontrado com esses critérios.";
-        }
-
-        int i = -1;
-        for (Map.Entry<Path, Pet> candidato : candidatos) {
-            i++;
-            System.out.println(i + " - " + candidato.getValue().getNome()+" - "+candidato.getValue().getTipopet()+" - "+candidato.getValue().getSexoPet()+" - "
-                    +candidato.getValue().getEndereco().getRua()+" "+candidato.getValue().getEndereco().getNumero()+" - "+candidato.getValue().getEndereco().getCidade()+
-                    " - "+candidato.getValue().getIdade()+" - "+candidato.getValue().getPeso()+" - "+candidato.getValue().getRaca());
-
-        }
-
-
-        System.out.print("Escolha o número do pet para deletar: ");
-        int escolha = sc.nextInt();
-        sc.nextLine();
-        Map.Entry<Path, Pet> selecionado = candidatos.get(escolha);
-        Pet pet = selecionado.getValue();
-
-        System.out.println(
-                "Tem certeza que deseja deletar o pet " + pet.getNome() + "? (S/N)"
-        );
-        String confirmacao = sc.nextLine();
-
-        if (!confirmacao.equalsIgnoreCase("S")) {
-            System.out.println("Operação cancelada.");
-            return "Operação Cancelada";
-        }else{   try {
-            Files.delete(Path.of("./petsCadastrados" +selecionado.getKey()));
+        try {
+            Files.delete(entry.getKey());
+            System.out.println("Pet deletado com sucesso.");
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }}
-
-
-
-
-        return "Arquivo Apagado";
+        }
     }
 
 
@@ -483,9 +426,9 @@ public class PetService {
     }
 
 
-    public String alterarPet2(Scanner sc) {
+    public void alterarPet2(Scanner sc) {
         Map.Entry<Path, Pet> entry = buscarESelecionarPetParaEdicao(sc);
-        if (entry == null) return "Método finalizado";
+        if (entry == null) return;
 
         Pet pet = entry.getValue();
         Path path = entry.getKey();
@@ -609,7 +552,7 @@ public class PetService {
         }
 
 
-        return "Método finalizado";
+        return;
     }
 }
 

@@ -1,21 +1,18 @@
 package test;
 
-import dominio.Endereco;
 import dominio.Pet;
 import dominio.SexoPet;
 import dominio.TipoPet;
 import exceptions.IdadeInvalidaException;
-import repositorioo.PetRepository;
+
 import service.PetService;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 import static repositorioo.PetRepository.*;
-import static service.PetService.*;
 
 public class SistemaPet {
 

@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.sql.SQLOutput;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -153,39 +152,6 @@ public class PetService {
 
 
 
-    public static void alterarPet(Scanner sc) {
-        String opcao = "";
-//        do {
-        System.out.println("O que você gostaria de alterar?");
-        System.out.print("1 - NOME");
-        System.out.print("2 - TIPO");
-        System.out.print("3- SEXO (FEMEA/MACHO)? ");
-        System.out.print("4 - IDADE");
-        System.out.println("5 - ENDERECO");
-
-//
-//            switch(opcao){
-//                case 1:
-//                    pet.setNome(sc.nextLine());
-//
-//
-//            }
-//        }
-
-
-        System.out.println("Qual o próximo item?");
-
-        String s = sc.nextLine().toUpperCase();
-        if (s.equals("SIM")) {
-
-        }
-
-
-        sc.nextLine();
-        System.out.print("Qual o endereço: ");
-//        pet.setNome(sc.nextLine());
-
-    }
 
     public void deletarPet(Scanner sc) {
         Map.Entry<Path, Pet> entry = buscarESelecionarPetParaEdicao(sc);
@@ -280,23 +246,7 @@ public class PetService {
     }
 
 
-    public List<Pet> carregarPetsDoBanco() {
-        List<Pet> pets = new ArrayList<>();
 
-        Path pasta = Paths.get("petsCadastrados");
-
-        try (Stream<Path> caminhos = Files.walk(pasta)) {
-            pets = caminhos
-                    .filter(Files::isRegularFile)
-                    .filter(p -> p.toString().endsWith(".txt"))
-                    .map(this::converterArquivoParaPet)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            System.out.println("Erro ao ler arquivos: " + e.getMessage());
-        }
-        return pets;
-    }
 
 
     public List<Map.Entry<Path, Pet>> buscarPetsParaEdicao(
@@ -554,5 +504,25 @@ public class PetService {
 
         return;
     }
+
+
+//
+//    public List<Pet> carregarPetsDoBanco() {
+//        List<Pet> pets = new ArrayList<>();
+//
+//        Path pasta = Paths.get("petsCadastrados");
+//
+//        try (Stream<Path> caminhos = Files.walk(pasta)) {
+//            pets = caminhos
+//                    .filter(Files::isRegularFile)
+//                    .filter(p -> p.toString().endsWith(".txt"))
+//                    .map(this::converterArquivoParaPet)
+//                    .filter(Objects::nonNull)
+//                    .collect(Collectors.toList());
+//        } catch (IOException e) {
+//            System.out.println("Erro ao ler arquivos: " + e.getMessage());
+//        }
+//        return pets;
+//    }
 }
 

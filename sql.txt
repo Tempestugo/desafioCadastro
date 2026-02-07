@@ -1,0 +1,5 @@
+Depois, criará todas as operações CRUD para este processo, criará todas as entidades que criamos antes (perguntas, alunos, respostas) e terá integração com banco de dados.
+
+ALÉM DISSO, é NECESSÁRIO que tenhamos testes unitários na aplicação (são muito bem valorizados, julgo que seja um conteúdo essencial).
+
+Além disso, temos que tratar as exceções de nossa aplicação, deixar rotas bem definidas, responder pro usuário com o status HTTP correto ok?

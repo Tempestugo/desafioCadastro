@@ -7,12 +7,17 @@ import dominio.TipoPet;
 import exceptions.IdadeInvalidaException;
 import exceptions.NomeInvalidoException;
 import exceptions.PesoInvalidoException;
+import test.ConnectionFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -32,7 +37,7 @@ public class PetService {
 
         System.out.print("Digite o nome do pet: ");
         pet.setNome(sc.nextLine());
-        String regex = "^[\\p{L}]+(\\s+[\\p{L}]+)+$";
+        String regex ="^[\\p{L}]+(\\s+[\\p{L}]+)+$";
         if (pet.getNome() == null || pet.getNome().isBlank()) {
             pet.setNome(constante);
         }
@@ -128,29 +133,75 @@ public class PetService {
         }
 
         System.out.println("Pet: " + pet.getNome() + " cadastrado!");
+
+
+        String sql = """ 
+                     INSERT INTO anime_store.pets (nome, SexoPet,TipoPet, Raca, Endereco, Idade, PESO) 
+                     VALUES (?,?,?,?,?,?,?);
+                     """;
+        try(Connection connection = ConnectionFactory.getConncection();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql)
+        ) {
+            preparedStatement.setString(1, pet.getNome());
+            preparedStatement.setString(2, pet.getSexoPet().toString());
+            preparedStatement.setString(3, pet.getTipopet().toString());
+            preparedStatement.setString(4, pet.getRaca());
+            preparedStatement.setString(5, pet.getEndereco().getRua()); 
+            
+            preparedStatement.setDouble(6, pet.getIdade());
+            preparedStatement.setDouble(7, pet.getPeso());
+            preparedStatement.execute();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("Pet: " + pet.getNome() + " cadastrado!");
     }
 
 
-    public List<Map.Entry<Path, Pet>> buscarPets(TipoPet tipoSelecionado, String nome, String raca, Integer idade, SexoPet sexo) {
-        Map<Path,Pet> todosPetsePaths = carregatPetsDoBancoMap();
-        List<Map.Entry<Path, Pet>> candidatos = new LinkedList<>();
-        todosPetsePaths.entrySet().stream()
-                .filter(p -> p.getValue().getTipopet() == tipoSelecionado || tipoSelecionado == null)
 
-                .filter(p -> nome == null || nome.isBlank() || p.getValue().getNome().toUpperCase().contains(nome.toUpperCase()))
-                .filter(p -> raca == null || raca.isBlank() || p.getValue().getRaca().equalsIgnoreCase(raca))
-                .filter(p -> idade == null || idade <= 0 || p.getValue().getIdade() == idade)
-                .filter(p -> sexo == null || p.getValue().getSexoPet() == sexo)
-                .collect(Collectors.toList());
-
-
-
-        return candidatos;
+    public List<Pet> buscarPets(TipoPet tipoSelecionado, String nome, String raca, Integer idade, SexoPet sexo) {
+        List<Pet> petsEncontrados = new ArrayList<>();
         
-  
+        String sql = "SELECT * FROM anime_store.pets WHERE 1=1";
+        
+        if (tipoSelecionado != null) sql += " AND TipoPet = ?";
+        if (nome != null) sql += " AND nome LIKE ?";
+        if (raca != null) sql += " AND Raca LIKE ?";
+        if (idade != null) sql += " AND Idade = ?";
+        if (sexo != null) sql += " AND SexoPet = ?";
+
+        try (Connection connection = ConnectionFactory.getConncection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            
+            int index = 1;
+            if (tipoSelecionado != null) ps.setString(index++, tipoSelecionado.toString());
+            if (nome != null) ps.setString(index++, "%" + nome + "%");
+            if (raca != null) ps.setString(index++, "%" + raca + "%");
+            if (idade != null) ps.setDouble(index++, idade);
+            if (sexo != null) ps.setString(index++, sexo.toString());
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Pet pet = new Pet();
+                pet.setNome(rs.getString("nome"));
+                pet.setTipopet(TipoPet.valueOf(rs.getString("TipoPet")));
+                pet.setSexoPet(SexoPet.valueOf(rs.getString("SexoPet")));
+                pet.setRaca(rs.getString("Raca"));
+                pet.setIdade(rs.getDouble("Idade"));
+                pet.setPeso(rs.getDouble("PESO"));
+                pet.setEndereco(new Endereco(rs.getString("Endereco"), 0, "", ""));
+                
+                petsEncontrados.add(pet);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return petsEncontrados;
     }
-
-
 
 
     public void deletarPet(Scanner sc) {
@@ -163,24 +214,67 @@ public class PetService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        String sql = """ 
+                                    DELETE FROM anime_store.pets
+                                    WHERE (? IS NULL OR nome = ?)
+                                      AND (? IS NULL OR SexoPet = ?)
+                                      AND (? IS NULL OR TipoPet = ?)
+                                      AND (? IS NULL OR Raca = ?)
+                                      AND (? IS NULL OR Endereco = ?)
+                                      AND (? IS NULL OR Idade = ?)
+                                      AND (? IS NULL OR PESO = ?);
+                                                         
+                     """;
+        try(Connection connection = ConnectionFactory.getConncection();
+            PreparedStatement preparedStatement = connection.prepareStatement(sql)
+        ) {
+            preparedStatement.setString(1, entry.getValue().getNome());
+            preparedStatement.setString(2, entry.getValue().getNome());
+            preparedStatement.setString(3, entry.getValue().getSexoPet().toString());
+            preparedStatement.setString(4, entry.getValue().getSexoPet().toString());
+            preparedStatement.setString(5, entry.getValue().getTipopet().toString());
+            preparedStatement.setString(6, entry.getValue().getTipopet().toString());
+            preparedStatement.setDouble(7,entry.getValue().getPeso());
+            preparedStatement.execute();
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
 
     public List<Pet> buscarTodos() {
-        Path pastaInicial = Paths.get("./petsCadastrados");
+        String sql = "SELECT * FROM anime_store.pets;";
+        try(Connection connection = ConnectionFactory.getConncection();
+            PreparedStatement ps = connection.prepareStatement(sql)
+        ) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String nome = rs.getString("nome");
+                String sexo = rs.getString("SexoPet");
+                String tipo = rs.getString("TipoPet");
+                String raca = rs.getString("Raca");
+                double peso = rs.getDouble("PESO");
 
+                System.out.println(String.format("Nome: %s | Tipo: %s | Raça: %s | Peso: %.2fkg",
+                        nome, tipo, raca, peso));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
+        Path pastaInicial = Paths.get("./petsCadastrados");
         try (Stream<Path> streamDeArquivos = Files.walk(pastaInicial)) {
             return streamDeArquivos
                     .filter(Files::isRegularFile)
                     .filter(path -> path.toString().endsWith(".txt"))
-
                     .map(this::converterArquivoParaPet)
-
-
                     .filter(Objects::nonNull)
-
                     .collect(Collectors.toList());
-
         } catch (IOException e) {
             return List.of();
         }
@@ -234,7 +328,6 @@ public class PetService {
             double peso = Double.parseDouble(pesoStr);
 
 
-            // Raça
             String raca = linhas.get(6).split(" - ", 2)[1].trim();
 
             return new Pet(nome, idade, peso, tipo, sexo, endereco, raca);
@@ -244,9 +337,6 @@ public class PetService {
             return null;
         }
     }
-
-
-
 
 
     public List<Map.Entry<Path, Pet>> buscarPetsParaEdicao(
@@ -261,35 +351,28 @@ public class PetService {
 
         return todosPets.entrySet()
                 .stream()
-
                 .filter(e -> tipoSelecionado == null
                         || e.getValue().getTipopet() == tipoSelecionado)
-
-
                 .filter(e -> nome == null || nome.isBlank()
                         || e.getValue().getNome()
                         .toUpperCase()
                         .contains(nome.toUpperCase()))
-
-
                 .filter(e -> raca == null || raca.isBlank()
                         || e.getValue().getRaca()
                         .equalsIgnoreCase(raca))
-
                 .filter(e -> idade == null || idade <= 0
                         || e.getValue().getIdade() == idade)
-
                 .filter(e -> sexo == null
                         || e.getValue().getSexoPet() == sexo)
-
                 .collect(Collectors.toList());
     }
+
     public Map.Entry<Path, Pet> buscarESelecionarPetParaEdicao(Scanner sc) {
 
         List<Map.Entry<Path, Pet>> candidatos;
 
         do {
-            System.out.println("\n--- BUSCA DE PET ---");
+            System.out.println("\n--- BUSCA DE PET PARA EDIÇÃO (ARQUIVO) ---");
 
             System.out.println("Tipo (ou Enter):");
             String tipoStr = sc.nextLine();
@@ -381,13 +464,8 @@ public class PetService {
         if (entry == null) return;
 
         Pet pet = entry.getValue();
-        Path path = entry.getKey();
 
-
-        System.out.println("Escolha o número do pet:");
-        int opcao = sc.nextInt();
-        sc.nextLine();
-;
+        System.out.println("Editando Pet: " + pet.getNome());
 
         System.out.println("Digite o NOME (ou Enter para ignorar):");
         String nome2 = sc.nextLine();
@@ -409,6 +487,7 @@ public class PetService {
             SexoPet sexoPet = SexoPet.valueOf(sexoPetStr.toUpperCase());
             pet.setSexoPet(sexoPet);
         }
+        
         String petIdade = null;
         System.out.println("Digite a nova Idade (ou Enter para ignorar):");
         String idadeStr2 = sc.nextLine();
@@ -420,18 +499,12 @@ public class PetService {
             throw new IdadeInvalidaException("A idade é inválida, maior que 20");
         }
         if (pet.getIdade() < 1) {
-            double idadeMeses = pet.getIdade() * 10;
             petIdade = pet.getIdade() + " Meses";
 
         } else {
             petIdade = pet.getIdade() + " anos";
 
         }
-        sc.nextLine();
-
-
-
-
 
 
         System.out.print("Qual o endereço (rua primeiro): ");
@@ -480,9 +553,6 @@ public class PetService {
             pet.setRaca(raca2);
         }
 
-
-
-
         try {
             Files.writeString(
                     entry.getKey(),
@@ -497,32 +567,143 @@ public class PetService {
                     StandardOpenOption.TRUNCATE_EXISTING,
                     StandardOpenOption.WRITE
             );
+            System.out.println("Pet atualizado no arquivo com sucesso!");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
-        return;
     }
 
 
-//
-//    public List<Pet> carregarPetsDoBanco() {
-//        List<Pet> pets = new ArrayList<>();
-//
-//        Path pasta = Paths.get("petsCadastrados");
-//
-//        try (Stream<Path> caminhos = Files.walk(pasta)) {
-//            pets = caminhos
-//                    .filter(Files::isRegularFile)
-//                    .filter(p -> p.toString().endsWith(".txt"))
-//                    .map(this::converterArquivoParaPet)
-//                    .filter(Objects::nonNull)
-//                    .collect(Collectors.toList());
-//        } catch (IOException e) {
-//            System.out.println("Erro ao ler arquivos: " + e.getMessage());
-//        }
-//        return pets;
-//    }
-}
 
+    public Pet buscarESelecionarPetSQL(Scanner sc) {
+        List<Pet> candidatos;
+
+        do {
+            System.out.println("\n--- BUSCA DE PET PARA EDIÇÃO (SQL) ---");
+
+            System.out.println("Tipo (ou Enter):");
+            String tipoStr = sc.nextLine();
+            TipoPet tipo = tipoStr.isBlank() ? null : TipoPet.valueOf(tipoStr.toUpperCase());
+
+            System.out.println("Nome (ou Enter):");
+            String nome = sc.nextLine();
+            if (nome.isBlank()) nome = null;
+
+            System.out.println("Raça (ou Enter):");
+            String raca = sc.nextLine();
+            if (raca.isBlank()) raca = null;
+
+            System.out.println("Idade (ou Enter):");
+            String idadeStr = sc.nextLine();
+            Integer idade = idadeStr.isBlank() ? null : Integer.parseInt(idadeStr);
+
+            System.out.println("Sexo (ou Enter):");
+            String sexoStr = sc.nextLine();
+            SexoPet sexo = sexoStr.isBlank() ? null : SexoPet.valueOf(sexoStr.toUpperCase());
+
+            candidatos = buscarPets(tipo, nome, raca, idade, sexo);
+
+            if (candidatos.isEmpty()) {
+                System.out.println("Nenhum pet encontrado no banco. Tentar novamente? (s/n)");
+                if (!sc.nextLine().equalsIgnoreCase("s")) {
+                    return null;
+                }
+            }
+
+        } while (candidatos.isEmpty());
+
+        int opcao;
+        do {
+            for (int i = 0; i < candidatos.size(); i++) {
+                Pet p = candidatos.get(i);
+                System.out.println(i + " - " + p.getNome() + " - " + p.getTipopet() + " - " + p.getRaca());
+            }
+
+            System.out.println("Escolha o número:");
+            while (!sc.hasNextInt()) {
+                System.out.println("Digite um número válido.");
+                sc.nextLine();
+            }
+
+            opcao = sc.nextInt();
+            sc.nextLine();
+
+            if (opcao < 0 || opcao >= candidatos.size()) {
+                System.out.println("Número inválido.");
+            }
+
+        } while (opcao < 0 || opcao >= candidatos.size());
+
+        return candidatos.get(opcao);
+    }
+
+    public void alterarPetSQL(Scanner sc) {
+
+        Pet pet = buscarESelecionarPetSQL(sc);
+        if (pet == null) return;
+        String nomeAntigo = pet.getNome();
+
+        System.out.println("Editando Pet (SQL): " + pet.getNome());
+
+        System.out.println("Novo NOME (ou Enter para manter '" + pet.getNome() + "'):");
+        String nomeNovo = sc.nextLine();
+        if (!nomeNovo.isBlank()) pet.setNome(nomeNovo);
+
+        System.out.println("Novo TIPO (ou Enter para manter '" + pet.getTipopet() + "'):");
+        String tipoStr = sc.nextLine();
+        if (!tipoStr.isBlank()) pet.setTipopet(TipoPet.valueOf(tipoStr.toUpperCase()));
+
+        System.out.println("Novo SEXO (ou Enter para manter '" + pet.getSexoPet() + "'):");
+        String sexoStr = sc.nextLine();
+        if (!sexoStr.isBlank()) pet.setSexoPet(SexoPet.valueOf(sexoStr.toUpperCase()));
+
+        System.out.println("Nova IDADE (ou Enter para manter '" + pet.getIdade() + "'):");
+        String idadeStr = sc.nextLine();
+        if (!idadeStr.isBlank()) pet.setIdade(Double.parseDouble(idadeStr));
+
+        System.out.println("Novo PESO (ou Enter para manter '" + pet.getPeso() + "'):");
+        String pesoStr = sc.nextLine();
+        if (!pesoStr.isBlank()) pet.setPeso(Double.parseDouble(pesoStr));
+
+        System.out.println("Nova RAÇA (ou Enter para manter '" + pet.getRaca() + "'):");
+        String racaStr = sc.nextLine();
+        if (!racaStr.isBlank()) pet.setRaca(racaStr);
+
+        System.out.println("Novo ENDEREÇO (Rua) (ou Enter para manter):");
+        String endStr = sc.nextLine();
+        if (!endStr.isBlank()) pet.getEndereco().setRua(endStr);
+
+
+        String sql = """
+                UPDATE anime_store.pets 
+                SET nome = ?, TipoPet = ?, SexoPet = ?, Idade = ?, PESO = ?, Raca = ?, Endereco = ?
+                WHERE nome = ?
+                """;
+
+        try (Connection conn = ConnectionFactory.getConncection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, pet.getNome());
+            ps.setString(2, pet.getTipopet().toString());
+            ps.setString(3, pet.getSexoPet().toString());
+            ps.setDouble(4, pet.getIdade());
+            ps.setDouble(5, pet.getPeso());
+            ps.setString(6, pet.getRaca());
+            ps.setString(7, pet.getEndereco().getRua());
+
+
+            ps.setString(8, nomeAntigo);
+
+            int linhasAfetadas = ps.executeUpdate();
+            if (linhasAfetadas > 0) {
+                System.out.println("Pet atualizado com sucesso no banco de dados!");
+            } else {
+                System.out.println("Erro: Nenhum pet foi atualizado. Verifique se o nome mudou no banco concorrentemente.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao atualizar pet no banco", e);
+        }
+    }
+}

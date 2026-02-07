@@ -24,6 +24,9 @@ public class SistemaPet {
 
         do {
             exibirMenu();
+            // Adicionando a nova opção no menu visualmente (se o método exibirMenu estiver em outro lugar, ele não será atualizado aqui, mas a opção funcionará)
+            System.out.println("6 - Editar Pet (SQL)"); 
+            
             opcao = scanner.nextInt();
             scanner.nextLine();
 
@@ -49,6 +52,10 @@ public class SistemaPet {
                 case 5:
                     PetService petService = new PetService();
                     menuBusca(scanner, petService);
+                    break;
+
+                case 6:
+                    service.alterarPetSQL(scanner);
                     break;
 
                 case 0:
@@ -127,7 +134,7 @@ public class SistemaPet {
             }
         }
 
-        List<Map.Entry<Path, Pet>> petsEncontrados = petService.buscarPets(tipoSelecionado, nome, raca, idade, sexoPet);
+        List<Pet> petsEncontrados = petService.buscarPets(tipoSelecionado, nome, raca, idade, sexoPet);
 
 
         if (petsEncontrados.isEmpty()) {
